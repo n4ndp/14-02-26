@@ -105,6 +105,39 @@ export function syncCarMesh(car, carBody) {
 }
 
 /**
+ * Create static colliders for maze walls
+ * @param {RAPIER.World} world - Physics world
+ * @param {number[][]} mazeData - 2D array where 1=wall, 0=path
+ */
+export function createMazeColliders(world, mazeData) {
+  const width = mazeData.length;
+  const height = mazeData[0].length;
+  
+  for (let x = 0; x < width; x++) {
+    for (let z = 0; z < height; z++) {
+      if (mazeData[x][z] === 1) {
+        // Create static rigid body for wall
+        const posX = x - width / 2;
+        const posZ = z - height / 2;
+        
+        const rigidBodyDesc = RAPIER.RigidBodyDesc.fixed()
+          .setTranslation(posX, 2, posZ);
+        
+        const rigidBody = world.createRigidBody(rigidBodyDesc);
+        
+        // Add box collider matching wall size (1x4x1)
+        const colliderDesc = RAPIER.ColliderDesc.cuboid(0.5, 2.0, 0.5) // Half-extents
+          .setFriction(0.8);
+        
+        world.createCollider(colliderDesc, rigidBody);
+      }
+    }
+  }
+  
+  console.log('[Physics] Maze wall colliders created');
+}
+
+/**
  * Step physics simulation forward
  * @param {RAPIER.World} world - Physics world
  */

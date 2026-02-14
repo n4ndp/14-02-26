@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { keys } from './input.js';
 import { generateMaze, createMazeGeometry, getMazeData } from './maze.js';
-import { initPhysics, createCarBody, updateCarPhysics, syncCarMesh, stepPhysics } from './physics.js';
+import { initPhysics, createCarBody, updateCarPhysics, syncCarMesh, stepPhysics, createMazeColliders } from './physics.js';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -42,10 +42,9 @@ let carBody = null;
 
 async function initializePhysics() {
   world = await initPhysics();
-  console.log('[Main] Physics initialized');
+  createMazeColliders(world, mazeData);
+  console.log('[Main] Physics + colliders initialized');
 }
-
-initializePhysics();
 
 function onCarModelLoaded(gltf) {
   car = gltf.scene;
@@ -70,6 +69,8 @@ loader.load('/assets/car.glb', onCarModelLoaded, undefined, onCarModelError);
 const mazeData = generateMaze(50, 50);
 const mazeWalls = createMazeGeometry(mazeData);
 scene.add(mazeWalls);
+
+initializePhysics();
 
 const cameraOffset = new THREE.Vector3(15, 15, 15);
 const cameraTarget = new THREE.Vector3(0, 0, 0);
