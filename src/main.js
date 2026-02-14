@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { keys } from './input.js';
+import { generateMaze, createMazeGeometry, getMazeData } from './maze.js';
+import { initPhysics, createCarBody, updateCarPhysics, syncCarMesh, stepPhysics } from './physics.js';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -35,6 +37,15 @@ scene.add(directionalLight);
 
 const loader = new GLTFLoader();
 let car = null;
+let world = null;
+let carBody = null;
+
+async function initializePhysics() {
+  world = await initPhysics();
+  console.log('[Main] Physics initialized');
+}
+
+initializePhysics();
 
 function onCarModelLoaded(gltf) {
   car = gltf.scene;
@@ -43,6 +54,11 @@ function onCarModelLoaded(gltf) {
   scene.add(car);
   window.__DEBUG_CAR = car;
   console.log('Car loaded successfully');
+  
+  if (world) {
+    carBody = createCarBody(world, car.position);
+    console.log('[Main] Car physics body created');
+  }
 }
 
 function onCarModelError(error) {
@@ -50,6 +66,10 @@ function onCarModelError(error) {
 }
 
 loader.load('/assets/car.glb', onCarModelLoaded, undefined, onCarModelError);
+
+const mazeData = generateMaze(50, 50);
+const mazeWalls = createMazeGeometry(mazeData);
+scene.add(mazeWalls);
 
 const cameraOffset = new THREE.Vector3(15, 15, 15);
 const cameraTarget = new THREE.Vector3(0, 0, 0);
@@ -64,6 +84,13 @@ function animate() {
   const delta = clock.getDelta();
   
   cube.rotation.y += 0.5 * delta;
+  
+  if (world && carBody && car) {
+    stepPhysics(world);
+    updateCarPhysics(carBody, keys);
+    syncCarMesh(car, carBody);
+    cameraTarget.copy(car.position);
+  }
   
   const desiredPosition = cameraTarget.clone().add(cameraOffset);
   camera.position.lerp(desiredPosition, 0.05);
@@ -81,5 +108,6 @@ window.addEventListener('resize', () => {
 window.__DEBUG_SCENE = scene;
 window.__DEBUG_RENDERER = renderer;
 window.__DEBUG_CAMERA = camera;
+window.__DEBUG_MAZE = getMazeData();
 
 animate();
