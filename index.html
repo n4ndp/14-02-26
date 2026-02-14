@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Razones por las que te amo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Indie+Flower&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Indie Flower', cursive;
+            background: linear-gradient(135deg, #f5e6d3 0%, #e8d4c0 50%, #d4b5a0 100%);
+        }
+
+        canvas {
+            display: block;
+            outline: none;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: clamp(10px, 3vw, 40px);
+            box-sizing: border-box;
+        }
+
+        .header {
+            text-align: center;
+        }
+
+        h1 {
+            font-family: 'Indie Flower', cursive;
+            font-weight: 400;
+            font-size: clamp(1.2rem, 5vw, 4rem);
+            color: #5c4033;
+            letter-spacing: clamp(0px, 0.5vw, 2px);
+            animation: fadeInDown 1.2s ease-out;
+        }
+
+        .counter {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+            padding: 12px 28px;
+            border-radius: 30px;
+            border: 1px solid rgba(92, 64, 51, 0.2);
+            display: inline-block;
+            margin-top: 16px;
+            font-size: 0.85rem;
+            font-weight: 400;
+            color: #5c4033;
+            box-shadow: 0 4px 20px rgba(92, 64, 51, 0.1);
+        }
+
+        .counter span {
+            font-weight: 500;
+            color: #8b5a3c;
+        }
+
+        .instructions {
+            text-align: center;
+            font-size: clamp(0.5rem, 2vw, 0.8rem);
+            color: #8b5a3c;
+            font-weight: 400;
+            opacity: 0.8;
+            letter-spacing: 0.5px;
+            animation: fadeIn 2s ease 1s backwards;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: all;
+        }
+
+        #overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .message-card {
+            background: #fff9f0;
+            padding: clamp(20px, 5vw, 50px) clamp(18px, 4vw, 45px);
+            border-radius: clamp(12px, 3vw, 20px);
+            max-width: clamp(280px, 90%, 480px);
+            width: 90%;
+            text-align: center;
+            box-shadow:
+                0 20px 60px rgba(0, 0, 0, 0.15),
+                0 0 0 1px rgba(255, 255, 255, 0.5) inset,
+                0 2px 4px rgba(255, 255, 255, 0.8) inset;
+            transform: scale(0.9) translateY(30px);
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .message-card::before {
+            content: '';
+            position: absolute;
+            top: clamp(-4px, -1vw, -8px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: clamp(40px, 15vw, 80px);
+            height: clamp(12px, 4vw, 25px);
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 12px 12px 0 0;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #overlay.active .message-card {
+            transform: scale(1) translateY(0);
+        }
+
+        .message-number {
+            font-family: 'Indie Flower', cursive;
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: #8b5a3c;
+            margin-bottom: 24px;
+            letter-spacing: 1px;
+        }
+
+        .message-text {
+            font-family: 'Indie Flower', cursive;
+            font-size: clamp(1rem, 4vw, 1.7rem);
+            line-height: 1.7;
+            color: #2c1810;
+            margin-bottom: clamp(20px, 5vw, 36px);
+            font-weight: 400;
+        }
+
+        .close-btn {
+            background: rgba(255, 255, 255, 0.4);
+            border: 2px solid rgba(92, 64, 51, 0.2);
+            color: #5c4033;
+            padding: clamp(8px, 2vw, 12px) clamp(20px, 5vw, 35px);
+            border-radius: 25px;
+            cursor: pointer;
+            font-family: 'Indie Flower', cursive;
+            font-weight: 400;
+            font-size: clamp(0.85rem, 3vw, 1.1rem);
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .close-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            background: rgba(255, 255, 255, 0.6);
+            border-color: rgba(92, 64, 51, 0.3);
+        }
+
+        #final-message {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(92, 64, 51, 0.92);
+            backdrop-filter: blur(20px);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px;
+        }
+
+        #final-message h2 {
+            font-family: 'Indie Flower', cursive;
+            font-size: clamp(1.4rem, 5vw, 2.8rem);
+            font-weight: 400;
+            color: #f5ebe0;
+            margin-bottom: clamp(15px, 3vw, 24px);
+            letter-spacing: 1px;
+        }
+
+        #final-message p {
+            font-family: 'Indie Flower', cursive;
+            font-size: clamp(0.9rem, 3vw, 1.3rem);
+            max-width: 90%;
+            line-height: 1.7;
+            color: #e8d4c0;
+            font-weight: 400;
+            margin: 0 auto 16px;
+        }
+
+        #final-message .final-phrase {
+            font-family: 'Indie Flower', cursive;
+            font-size: clamp(1.3rem, 4vw, 2rem);
+            color: #f5ebe0;
+            margin-top: clamp(20px, 4vw, 32px);
+            font-weight: 400;
+        }
+
+        #final-message .close-btn {
+            margin-top: 40px;
+        }
+
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 1000;
+            background: rgba(255, 249, 240, 0.95);
+            padding: clamp(1.5rem, 4vw, 2.5rem) clamp(2rem, 5vw, 3.5rem);
+            border-radius: 12px;
+            box-shadow: 0 15px 50px rgba(92, 64, 51, 0.2);
+            border: 1px solid rgba(201, 167, 124, 0.3);
+            max-width: 90%;
+        }
+
+        .loading-text {
+            font-size: clamp(0.85rem, 3vw, 1.1rem);
+            margin-bottom: 1.2rem;
+            color: #5c4033;
+            font-weight: 400;
+            letter-spacing: 1px;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(139, 90, 60, 0.2);
+            border-top: 3px solid #8b5a3c;
+            border-radius: 50%;
+            animation: spin 1.2s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Tablets y pantallas medianas */
+        @media (max-width: 768px) {
+            #ui-layer {
+                padding: 20px 15px;
+            }
+        }
+
+        /* Móviles en landscape */
+        @media (max-width: 812px) and (orientation: landscape) {
+            #ui-layer {
+                padding: 8px 10px;
+            }
+
+            .message-card {
+                max-height: 75vh;
+            }
+        }
+
+        /* Pantallas grandes */
+        @media (min-width: 1400px) {
+            .message-card {
+                max-width: 550px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading" class="loading">
+        <div class="loading-text">Cargando...</div>
+        <div class="loader"></div>
+    </div>
+
+    <div id="ui-layer">
+        <div class="header">
+            <h1>Razones por las que te amo</h1>
+        </div>
+        <div class="instructions" id="instruction-hint">Haz clic en un pergamino para descubrir una razón</div>
+    </div>
+
+    <div id="overlay" onclick="closeOverlay()">
+        <div class="message-card" onclick="event.stopPropagation()">
+            <div class="message-number" id="message-number">Razón #1</div>
+            <div class="message-text" id="reason-text"></div>
+            <button class="close-btn" onclick="closeOverlay()">Cerrar</button>
+        </div>
+    </div>
+
+    <div id="final-message">
+        <div>
+            <h2>Has descubierto todas las razones</h2>
+            <p>Estas son solo algunas de las infinitas razones por las que te amo.</p>
+            <p>Cada día descubro algo nuevo que me hace quererte más.</p>
+            <div class="final-phrase">Te amo</div>
+            <button class="close-btn" onclick="window.location.reload()">Volver a empezar</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
+
+    <script>
+        // ========================================
+        // PERSONALIZA ESTAS RAZONES
+        // ========================================
+        const razones = [
+            "Porque llegaste cuando más te necesitaba",
+            "Porque me haces sonreír sin intentarlo",
+            "Porque tus abrazos son mi lugar seguro",
+            "Porque me entiendes sin que diga una palabra",
+            "Porque confías en mí",
+            "Porque siempre me apoyas en todo",
+            "Porque haces que cada día sea mejor",
+            "Porque tus ojos me transmiten paz",
+            "Porque amo tu forma de reír",
+            "Porque me haces sentir importante",
+            "Porque me enseñas a amar de verdad",
+            "Porque eres mi mejor amiga y mi amor a la vez",
+            "Porque me haces sentir orgulloso de ti",
+            "Porque me haces querer ser mejor persona",
+            "Porque te preocupas por mí",
+            "Porque me das cariño sin pedir nada a cambio",
+            "Porque haces que crea en el amor",
+            "Porque tus mensajes alegran mi día",
+            "Porque me haces sentir único",
+            "Porque contigo todo tiene sentido",
+            "Porque te amo tal como eres",
+            "Porque siempre sabes cómo animarme",
+            "Porque no me juzgas, me entiendes",
+            "Porque eres mi calma y mi locura",
+            "Porque haces que me ría incluso en los peores días",
+            "Porque eres paciente conmigo",
+            "Porque confías en mis sueños",
+            "Porque me das ganas de luchar por nosotros",
+            "Porque nunca te rindes",
+            "Porque te brillan los ojos cuando hablas de lo que amas",
+            "Porque tu voz me tranquiliza",
+            "Porque amo cuando me miras en silencio",
+            "Porque me haces sentir amado de verdad",
+            "Porque me inspiras todos los días",
+            "Porque contigo soy yo mismo",
+            "Porque compartimos locuras juntos",
+            "Porque me haces sentir afortunado",
+            "Porque amo tu sinceridad",
+            "Porque tus besos lo curan todo",
+            "Porque eres mi refugio",
+            "Porque tus pequeñas cosas me enamoran",
+            "Porque haces que todo sea más bonito",
+            "Porque me aceptas con mis defectos",
+            "Porque siempre estás aunque no lo diga",
+            "Porque me haces sentir en casa",
+            "Porque tu amor es puro",
+            "Porque me haces creer que todo es posible",
+            "Porque tienes un corazón enorme",
+            "Porque haces que el tiempo pase volando",
+            "Porque eres mi razón para sonreír",
+            "Porque nunca me sueltas la mano",
+            "Porque sabes cómo cuidarme",
+            "Porque me das tranquilidad",
+            "Porque puedo ser vulnerable contigo",
+            "Porque me haces sentir amado sin palabras",
+            "Porque me haces reír con tus tonterías",
+            "Porque haces que cada momento cuente",
+            "Porque me enseñaste lo que es amar",
+            "Porque contigo no necesito más",
+            "Porque eres hermosa por dentro y por fuera",
+            "Porque tus abrazos son los mejores del mundo",
+            "Porque me das paz",
+            "Porque confío en ti completamente",
+            "Porque me haces sentir valioso",
+            "Porque no hay nadie como tú",
+            "Porque amo verte feliz",
+            "Porque siempre sabes qué decir",
+            "Porque tu amor me da fuerza",
+            "Porque me haces sentir que pertenezco",
+            "Porque compartimos sueños",
+            "Porque me haces sentir amado cada día",
+            "Porque eres mi motivación",
+            "Porque me haces sentir orgulloso de tenerte",
+            "Porque te amo incluso cuando discutimos",
+            "Porque siempre encontramos la forma de arreglarlo",
+            "Porque me enseñas a tener paciencia",
+            "Porque eres parte de mis planes",
+            "Porque me haces sentir paz solo con verte",
+            "Porque me das ganas de abrazarte todo el tiempo",
+            "Porque amo tus detalles",
+            "Porque amo cuando me dices te amo",
+            "Porque tu risa me contagia",
+            "Porque eres mi persona favorita",
+            "Porque nunca me dejas solo",
+            "Porque me das seguridad",
+            "Porque eres única",
+            "Porque me haces sentir completo",
+            "Porque contigo no necesito fingir",
+            "Porque eres mi todo",
+            "Porque haces que crea en el futuro",
+            "Porque amo tus ocurrencias",
+            "Porque me das calma cuando estoy mal",
+            "Porque contigo soy feliz sin motivo",
+            "Porque me haces sentir que vale la pena",
+            "Porque te amo cada día más",
+            "Porque siempre me haces reír",
+            "Porque eres lo mejor que me pasó",
+            "Porque contigo quiero todo",
+            "Porque simplemente te amo",
+            "Porque me haces sentir protegido",
+            "Porque eres mi compañera de vida",
+            "Porque me escuchas de verdad",
+            "Porque celebras mis logros conmigo",
+            "Porque me das la mano cuando la necesito",
+            "Porque haces que los días difíciles sean más fáciles",
+            "Porque eres mi persona",
+            "Porque me haces sentir especial",
+            "Porque amo tu forma de ser",
+            "Porque me haces sentir vivo",
+            "Porque contigo me siento seguro",
+            "Porque eres mi motor y mi motivo",
+            "Porque me gusta tu forma de amar",
+            "Porque siempre me das una razón para seguir",
+            "Porque me cuidas sin que te lo pida",
+            "Porque amo tu mirada",
+            "Porque me haces sentir que todo está bien",
+            "Porque eres mi luz en los días oscuros",
+            "Porque me das esperanza",
+            "Porque contigo el tiempo no importa",
+            "Porque eres mi lugar favorito",
+            "Porque me haces sentir en paz",
+            "Porque tu presencia me calma",
+            "Porque amo cómo me miras",
+            "Porque me das la fuerza que necesito",
+            "Porque haces que quiera ser mejor",
+            "Porque eres mi equilibrio",
+            "Porque me haces sentir que no estoy solo",
+            "Porque amo cuando me abrazas",
+            "Porque tu sonrisa me alegra el día",
+            "Porque me das amor incondicional",
+            "Porque eres mi confidente",
+            "Porque puedo contarte todo",
+            "Porque me haces sentir entendido",
+            "Porque siempre estás para mí",
+            "Porque amo tu forma de pensar",
+            "Porque me haces sentir querido",
+            "Porque eres mi compañía perfecta",
+            "Porque contigo puedo ser vulnerable",
+            "Porque me das la confianza que necesito",
+            "Porque eres mi desahogo",
+            "Porque me haces sentir libre",
+            "Porque amo tu energía",
+            "Porque me das ganas de mejorar",
+            "Porque eres mi inspiración diaria",
+            "Porque me haces sentir capaz de todo",
+            "Porque contigo todo es más fácil",
+            "Porque eres mi paz mental",
+            "Porque me das claridad cuando la necesito",
+            "Porque amo tu forma de ver el mundo",
+            "Porque me haces sentir valorado",
+            "Porque eres mi apoyo incondicional",
+            "Porque me das estabilidad",
+            "Porque contigo me siento completo",
+            "Porque eres mi ancla",
+            "Porque me haces sentir bien conmigo mismo",
+            "Porque amo tu compañía",
+            "Porque me das alegría",
+            "Porque eres mi felicidad",
+            "Porque me haces sentir pleno",
+            "Porque contigo todo fluye",
+            "Porque eres mi complemento",
+            "Porque me das balance",
+            "Porque amo tu forma de abrazar",
+            "Porque me haces sentir a salvo",
+            "Porque eres mi tranquilidad",
+            "Porque me das confianza en mí mismo",
+            "Porque contigo puedo relajarme",
+            "Porque eres mi descanso",
+            "Porque me haces sentir en paz conmigo",
+            "Porque amo tu forma de hablar",
+            "Porque me das tu tiempo",
+            "Porque eres mi prioridad y yo la tuya",
+            "Porque me haces sentir importante en tu vida",
+            "Porque contigo me siento valorado",
+            "Porque eres mi tesoro",
+            "Porque me das todo tu amor",
+            "Porque amo cuando estamos juntos",
+            "Porque me haces sentir que no necesito nada más",
+            "Porque eres mi suficiente",
+            "Porque me das lo que necesito",
+            "Porque contigo me siento lleno",
+            "Porque eres mi satisfacción",
+            "Porque me haces sentir realizado",
+            "Porque amo tu forma de quererme",
+            "Porque me das tu atención",
+            "Porque eres mi enfoque",
+            "Porque me haces sentir presente",
+            "Porque contigo estoy en el momento",
+            "Porque eres mi ahora",
+            "Porque me das presencia",
+            "Porque amo tu forma de estar",
+            "Porque me haces sentir acompañado",
+            "Porque eres mi compañía constante",
+            "Porque me das cercanía",
+            "Porque contigo no hay distancia",
+            "Porque eres mi conexión",
+            "Porque me haces sentir unido a ti",
+            "Porque amo nuestra unión",
+            "Porque me das pertenencia",
+            "Porque eres mi hogar",
+            "Porque me haces sentir arraigado",
+            "Porque contigo tengo raíces",
+            "Porque eres mi base",
+            "Porque me das fundamento",
+            "Porque amo lo que construimos juntos",
+            "Porque me haces sentir parte de algo",
+            "Porque eres mi equipo",
+            "Porque me das compañerismo",
+            "Porque contigo somos nosotros",
+            "Porque eres mi nosotros",
+            "Porque me haces sentir que somos uno",
+            "Porque amo nuestra historia",
+            "Porque me das recuerdos",
+            "Porque eres mi pasado bonito",
+            "Porque me haces sentir que valió la pena",
+            "Porque contigo todo cobra sentido",
+            "Porque eres mi razón",
+            "Porque me das propósito",
+            "Porque amo nuestro futuro",
+            "Porque me haces sentir que hay mañana",
+            "Porque eres mi futuro",
+            "Porque me das ilusión",
+            "Porque contigo tengo planes",
+            "Porque eres mi proyecto de vida",
+            "Porque me haces sentir que vamos juntos",
+            "Porque amo nuestro camino",
+            "Porque me das dirección",
+            "Porque eres mi norte",
+            "Porque me haces sentir orientado",
+            "Porque contigo sé a dónde voy",
+            "Porque eres mi guía",
+            "Porque me das claridad",
+            "Porque amo tu forma de guiarme",
+            "Porque me haces sentir seguro del camino",
+            "Porque eres mi certeza",
+            "Porque me das confianza en nosotros",
+            "Porque contigo no tengo dudas",
+            "Porque eres mi seguridad",
+            "Porque me haces sentir firme",
+            "Porque amo nuestra solidez",
+            "Porque me das estabilidad emocional",
+            "Porque eres mi roca",
+            "Porque me haces sentir sostenido",
+            "Porque contigo tengo soporte",
+            "Porque eres mi columna",
+            "Porque me das estructura",
+            "Porque amo cómo me sostienes",
+            "Porque me haces sentir fuerte",
+            "Porque eres mi fortaleza",
+            "Porque me das poder",
+            "Porque contigo me siento invencible",
+            "Porque eres mi escudo",
+            "Porque me haces sentir defendido",
+            "Porque amo tu forma de protegerme",
+            "Porque me das resguardo",
+            "Porque eres mi protección",
+            "Porque me haces sentir cuidado",
+            "Porque contigo estoy a salvo",
+            "Porque eres mi refugio seguro",
+            "Porque me das cobijo",
+            "Porque amo tu forma de abrigarme",
+            "Porque me haces sentir arropado",
+            "Porque eres mi abrigo",
+            "Porque me das calor",
+            "Porque contigo no tengo frío",
+            "Porque eres mi calidez",
+            "Porque me haces sentir tibio por dentro",
+            "Porque amo tu ternura",
+            "Porque me das dulzura",
+            "Porque eres mi miel",
+            "Porque me haces sentir endulzado",
+            "Porque contigo todo es suave",
+            "Porque eres mi delicadeza",
+            "Porque me das cuidado",
+            "Porque amo tu forma de tratarme",
+            "Porque me haces sentir mimado",
+            "Porque eres mi mimo",
+            "Porque me das caricias",
+            "Porque contigo me siento consentido",
+            "Porque eres mi consiento",
+            "Porque me haces sentir especial para ti",
+            "Porque amo lo especial que soy para ti",
+            "Porque me das tu corazón",
+            "Porque eres mi dueña",
+            "Porque me haces sentir tuyo",
+            "Porque contigo soy tuyo",
+            "Porque eres mía",
+            "Porque me das reciprocidad",
+            "Porque amo que seamos de ambos",
+            "Porque me haces sentir correspondido",
+            "Porque eres mi correspondencia",
+            "Porque me das mutualidad",
+            "Porque contigo hay equilibrio",
+            "Porque eres mi balance perfecto",
+            "Porque me haces sentir equitativo",
+            "Porque amo nuestra igualdad",
+            "Porque me das paridad",
+            "Porque eres mi igual",
+            "Porque me haces sentir a tu nivel",
+            "Porque contigo no hay jerarquías",
+            "Porque eres mi par",
+            "Porque me das horizontalidad",
+            "Porque amo nuestra complicidad",
+            "Porque me haces sentir cómplice",
+            "Porque eres mi cómplice de todo",
+            "Porque me das camaradería",
+            "Porque contigo somos equipo",
+            "Porque eres mi compañera de batalla",
+            "Porque me haces sentir que luchamos juntos",
+            "Porque amo nuestra alianza",
+            "Porque me das alianza",
+            "Porque eres mi aliada",
+            "Porque me haces sentir que estamos del mismo lado",
+            "Porque contigo no hay bandos",
+            "Porque eres mi unidad",
+            "Porque me das cohesión",
+            "Porque amo nuestra integración",
+            "Porque me haces sentir integrado",
+            "Porque eres mi integración perfecta",
+            "Porque me das completitud",
+            "Porque contigo me siento entero",
+            "Porque eres mi totalidad",
+            "Porque me haces sentir absoluto",
+            "Porque amo nuestra plenitud",
+            "Porque me das satisfacción completa",
+            "Porque eres mi satisfacción plena",
+            "Porque me haces sentir saciado",
+            "Porque contigo no me falta nada",
+            "Porque eres mi todo suficiente",
+            "Porque me das abundancia",
+            "Porque amo tu generosidad",
+            "Porque me haces sentir colmado",
+            "Porque eres mi abundancia",
+            "Porque me das más de lo que necesito",
+            "Porque contigo tengo de sobra",
+            "Porque eres mi exceso positivo",
+            "Porque me haces sentir desbordado de amor",
+            "Porque amo tu desborde",
+            "Porque me das intensidad",
+            "Porque eres mi intensidad perfecta",
+            "Porque me haces sentir intenso",
+            "Porque contigo todo es profundo",
+            "Porque eres mi profundidad",
+            "Porque me das hondura",
+            "Porque amo nuestra profundidad",
+            "Porque me haces sentir profundo contigo",
+            "Porque eres mi océano",
+            "Porque me das inmensidad",
+            "Porque contigo me siento inmenso",
+            "Porque eres mi infinito",
+            "Porque me haces sentir sin límites",
+            "Porque amo nuestra infinitud",
+            "Porque me das eternidad",
+            "Porque eres mi eternidad",
+            "Porque me haces sentir eterno",
+            "Porque contigo el tiempo no existe",
+            "Porque eres mi atemporalidad",
+            "Porque me das permanencia",
+            "Porque amo nuestra permanencia",
+            "Porque me haces sentir que esto es para siempre",
+            "Porque eres mi para siempre",
+            "Porque me das la certeza de que no acabará",
+            "Porque contigo sé que esto es real",
+            "Porque eres mi realidad más bella",
+            "Porque me haces sentir que esto no es un sueño",
+            "Porque amo nuestra realidad",
+            "Porque me das concreción",
+            "Porque eres mi tangible",
+            "Porque me haces sentir que eres real",
+            "Porque contigo todo es verdadero",
+            "Porque eres mi verdad",
+            "Porque me das autenticidad",
+            "Porque amo tu autenticidad",
+            "Porque me haces sentir genuino",
+            "Porque eres mi genuina",
+            "Porque me das legitimidad",
+            "Porque contigo todo es legítimo",
+            "Porque eres mi validez",
+            "Porque me haces sentir válido",
+            "Porque amo que me valides",
+            "Porque me das reconocimiento",
+            "Porque eres mi reconocimiento",
+            "Porque me haces sentir visto",
+            "Porque contigo existo de verdad",
+            "Porque eres mi existencia real",
+            "Porque me das presencia real",
+            "Porque amo existir contigo"
+        ];
+
+        const TOTAL = razones.length;
+
+        // Paleta de colores SATURADOS Y FUERTES (como papel bond de colores)
+        const scrollColors = [
+            // Rosas/Fucsia fuertes
+            0xff66b2, 0xff3399, 0xff4db8, 0xff1a8c, 0xff70bd,
+            // Azules cielo saturados
+            0x4db8ff, 0x3399ff, 0x66c2ff, 0x1a8cff, 0x70ccff,
+            // Morados intensos
+            0xb366ff, 0x9933ff, 0xc266ff, 0x8c1aff, 0xbd70ff,
+            // Verdes menta fuertes
+            0x33ffc4, 0x00ffb3, 0x4dffcc, 0x00e6a1, 0x5cffdb,
+            // Naranjas coral fuertes
+            0xff8c4d, 0xff7733, 0xffa166, 0xff661a, 0xffb070,
+            // Amarillos fuertes
+            0xffe633, 0xffdd00, 0xffeb4d, 0xffd700, 0xfff05c,
+            // Lavanda/Malva saturados
+            0xcc66ff, 0xb833ff, 0xd966ff, 0xa61aff, 0xe070ff,
+            // Turquesa saturados
+            0x00e6cc, 0x00d9bd, 0x1affe0, 0x00c2ad, 0x33ffd9,
+            // Verde lima
+            0x99ff33, 0x85e600, 0xadff4d, 0x70cc00, 0xbbff70
+        ];
+
+        let discoveredCount = 0;
+        let nextScrollIndex = 0; // Índice del siguiente pergamino a sacar
+        const scrollMeshes = [];
+        const flyAnimations = [];
+
+        let scene, camera, renderer, controls;
+        let jar, lid;
+        let lidOpen = false;
+
+        class SimpleOrbitControls {
+            constructor(camera, domElement) {
+                this.camera = camera;
+                this.domElement = domElement;
+                this.enabled = true;
+                this.enableDamping = true;
+                this.dampingFactor = 0.08;
+                this.autoRotate = true;
+                this.autoRotateSpeed = 0.5;
+                this.minDistance = 4;
+                this.maxDistance = 15;
+                this.maxPolarAngle = Math.PI * 0.5;
+                this.minPolarAngle = Math.PI * 0.2;
+                this.target = new THREE.Vector3(0, 1.5, 0);
+
+                this.spherical = new THREE.Spherical();
+                this.sphericalDelta = new THREE.Spherical();
+                this.scale = 1;
+
+                this.rotateStart = new THREE.Vector2();
+                this.rotateEnd = new THREE.Vector2();
+                this.rotateDelta = new THREE.Vector2();
+                this.state = 'NONE';
+
+                this.onMouseDown = this.onMouseDown.bind(this);
+                this.onMouseMove = this.onMouseMove.bind(this);
+                this.onMouseUp = this.onMouseUp.bind(this);
+                this.onTouchStart = this.onTouchStart.bind(this);
+                this.onTouchMove = this.onTouchMove.bind(this);
+                this.onTouchEnd = this.onTouchEnd.bind(this);
+
+                this.domElement.addEventListener('mousedown', this.onMouseDown);
+                this.domElement.addEventListener('touchstart', this.onTouchStart, { passive: false });
+            }
+
+            update() {
+                const offset = new THREE.Vector3();
+                const quat = new THREE.Quaternion().setFromUnitVectors(
+                    this.camera.up, new THREE.Vector3(0, 1, 0)
+                );
+                const quatInverse = quat.clone().invert();
+
+                offset.copy(this.camera.position).sub(this.target);
+                offset.applyQuaternion(quat);
+                this.spherical.setFromVector3(offset);
+
+                if (this.autoRotate && this.state === 'NONE') {
+                    this.spherical.theta -= (2 * Math.PI / 60 / 60) * this.autoRotateSpeed;
+                }
+
+                this.spherical.theta += this.sphericalDelta.theta * this.dampingFactor;
+                this.spherical.phi += this.sphericalDelta.phi * this.dampingFactor;
+                this.spherical.phi = Math.max(this.minPolarAngle, Math.min(this.maxPolarAngle, this.spherical.phi));
+                this.spherical.makeSafe();
+                this.spherical.radius *= this.scale;
+                this.spherical.radius = Math.max(this.minDistance, Math.min(this.maxDistance, this.spherical.radius));
+
+                offset.setFromSpherical(this.spherical);
+                offset.applyQuaternion(quatInverse);
+                this.camera.position.copy(this.target).add(offset);
+                this.camera.lookAt(this.target);
+
+                if (this.enableDamping) {
+                    this.sphericalDelta.theta *= (1 - this.dampingFactor);
+                    this.sphericalDelta.phi *= (1 - this.dampingFactor);
+                } else {
+                    this.sphericalDelta.set(0, 0, 0);
+                }
+                this.scale = 1;
+            }
+
+            onMouseDown(event) {
+                if (!this.enabled) return;
+                event.preventDefault();
+                this.rotateStart.set(event.clientX, event.clientY);
+                this.state = 'ROTATE';
+                this.domElement.addEventListener('mousemove', this.onMouseMove);
+                this.domElement.addEventListener('mouseup', this.onMouseUp);
+            }
+
+            onMouseMove(event) {
+                if (!this.enabled) return;
+                event.preventDefault();
+                this.rotateEnd.set(event.clientX, event.clientY);
+                this.rotateDelta.subVectors(this.rotateEnd, this.rotateStart).multiplyScalar(0.005);
+                this.sphericalDelta.theta -= 2 * Math.PI * this.rotateDelta.x / this.domElement.clientHeight;
+                this.sphericalDelta.phi -= 2 * Math.PI * this.rotateDelta.y / this.domElement.clientHeight;
+                this.rotateStart.copy(this.rotateEnd);
+            }
+
+            onMouseUp() {
+                if (!this.enabled) return;
+                this.domElement.removeEventListener('mousemove', this.onMouseMove);
+                this.domElement.removeEventListener('mouseup', this.onMouseUp);
+                this.state = 'NONE';
+            }
+
+            onTouchStart(event) {
+                if (!this.enabled) return;
+                event.preventDefault();
+                if (event.touches.length === 1) {
+                    this.rotateStart.set(event.touches[0].pageX, event.touches[0].pageY);
+                    this.state = 'TOUCH_ROTATE';
+                    this.domElement.addEventListener('touchmove', this.onTouchMove, { passive: false });
+                    this.domElement.addEventListener('touchend', this.onTouchEnd);
+                }
+            }
+
+            onTouchMove(event) {
+                if (!this.enabled) return;
+                event.preventDefault();
+                if (event.touches.length === 1) {
+                    this.rotateEnd.set(event.touches[0].pageX, event.touches[0].pageY);
+                    this.rotateDelta.subVectors(this.rotateEnd, this.rotateStart).multiplyScalar(0.005);
+                    this.sphericalDelta.theta -= 2 * Math.PI * this.rotateDelta.x / this.domElement.clientHeight;
+                    this.sphericalDelta.phi -= 2 * Math.PI * this.rotateDelta.y / this.domElement.clientHeight;
+                    this.rotateStart.copy(this.rotateEnd);
+                }
+            }
+
+            onTouchEnd() {
+                if (!this.enabled) return;
+                this.domElement.removeEventListener('touchmove', this.onTouchMove);
+                this.domElement.removeEventListener('touchend', this.onTouchEnd);
+                this.state = 'NONE';
+            }
+        }
+
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf5e6d3);
+            scene.fog = new THREE.Fog(0xf5e6d3, 15, 35);
+
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.set(0, 3.5, 9);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 0.9;  // Reducido más para iluminación suave
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            document.body.appendChild(renderer.domElement);
+
+            controls = new SimpleOrbitControls(camera, renderer.domElement);
+
+            // Iluminación MUY suave y difusa (ambiente acogedor)
+            const ambientLight = new THREE.AmbientLight(0xfff9f0, 0.3);  // Más reducida
+            scene.add(ambientLight);
+
+            const hemisphereLight = new THREE.HemisphereLight(0xfff9f0, 0xd4b896, 0.25);  // Más reducida
+            scene.add(hemisphereLight);
+
+            const dirLight = new THREE.DirectionalLight(0xfff5e1, 0.5);  // Más reducida
+            dirLight.position.set(8, 12, 6);
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.set(2048, 2048);
+            dirLight.shadow.camera.near = 0.5;
+            dirLight.shadow.camera.far = 30;
+            dirLight.shadow.camera.left = -10;
+            dirLight.shadow.camera.right = 10;
+            dirLight.shadow.camera.top = 10;
+            dirLight.shadow.camera.bottom = -10;
+            dirLight.shadow.radius = 3;
+            dirLight.shadow.bias = -0.0001;
+            scene.add(dirLight);
+
+            const fillLight = new THREE.DirectionalLight(0xf4e4c1, 0.25);  // Más reducida
+            fillLight.position.set(-5, 3, -5);
+            scene.add(fillLight);
+
+            // Luz suave desde abajo
+            const bottomLight = new THREE.PointLight(0xfff9f0, 0.2, 10);  // Más reducida
+            bottomLight.position.set(0, 0.5, 0);
+            scene.add(bottomLight);
+
+            createSurface();
+            createJar();
+            createScrolls();
+
+            window.addEventListener('resize', onResize);
+            renderer.domElement.addEventListener('click', onPointer);
+
+            setTimeout(() => {
+                const h = document.getElementById('instruction-hint');
+                if (h) { h.style.transition = 'opacity 3s'; h.style.opacity = '0'; }
+            }, 5000);
+
+            setTimeout(() => {
+                document.getElementById('loading').style.display = 'none';
+            }, 800);
+
+            updateCounter();
+            loadProgress();  // Cargar progreso guardado
+            animate();
+        }
+
+        function createSurface() {
+            // Mesa de madera
+            const tableMat = new THREE.MeshStandardMaterial({
+                color: 0x8b5a3c,
+                roughness: 0.8,
+                metalness: 0.1
+            });
+            const table = new THREE.Mesh(
+                new THREE.CylinderGeometry(5, 5.2, 0.4, 32),
+                tableMat
+            );
+            table.position.y = -0.2;
+            table.receiveShadow = true;
+            scene.add(table);
+        }
+
+        function createJar() {
+            // Tarro más chato y ancho
+            const jarPoints = [
+                [0.0, 0.0], [1.8, 0.0], [2.0, 0.15],
+                [2.1, 0.4], [2.15, 1.0], [2.15, 1.8],
+                [2.1, 2.3], [2.0, 2.6], [1.85, 2.75],
+                [1.85, 2.85], [1.85, 2.9]
+            ].map(([x, y]) => new THREE.Vector2(x, y));
+
+            jar = new THREE.Mesh(
+                new THREE.LatheGeometry(jarPoints, 32),
+                new THREE.MeshStandardMaterial({
+                    color: 0xffffff,
+                    roughness: 0.1,
+                    metalness: 0.1,
+                    transparent: true,
+                    opacity: 0.25,  // Más visible
+                    side: THREE.FrontSide
+                })
+            );
+            jar.castShadow = false;
+            jar.receiveShadow = true;
+            scene.add(jar);
+
+            // Borde del frasco (wireframe sutil para marcar el contorno)
+            const edgeGeometry = new THREE.EdgesGeometry(jar.geometry, 15);
+            const edgeMaterial = new THREE.LineBasicMaterial({
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.3,
+                linewidth: 1
+            });
+            const edges = new THREE.LineSegments(edgeGeometry, edgeMaterial);
+            jar.add(edges);
+
+            // ILUMINACIÓN INTERNA - Balanceada para colores mate
+            // Luz central suave
+            const innerLight1 = new THREE.PointLight(0xffffff, 0.7, 5);
+            innerLight1.position.set(0, 1.5, 0);
+            scene.add(innerLight1);
+
+            // Luces de apoyo
+            const innerLight2 = new THREE.PointLight(0xffffff, 0.6, 4);
+            innerLight2.position.set(0, 0.8, 0);
+            scene.add(innerLight2);
+
+            const innerLight3 = new THREE.PointLight(0xffffff, 0.6, 4);
+            innerLight3.position.set(0, 2.2, 0);
+            scene.add(innerLight3);
+
+            // Luces laterales
+            const sideLight1 = new THREE.PointLight(0xffffff, 0.4, 3);
+            sideLight1.position.set(1.2, 1.5, 0);
+            scene.add(sideLight1);
+
+            const sideLight2 = new THREE.PointLight(0xffffff, 0.4, 3);
+            sideLight2.position.set(-1.2, 1.5, 0);
+            scene.add(sideLight2);
+
+            // Tapa de madera PLANA (sin codito/knob)
+            const woodMat = new THREE.MeshStandardMaterial({
+                color: 0x6d4c41,
+                roughness: 0.9,
+                metalness: 0.05
+            });
+
+            lid = new THREE.Group();
+
+            // Tapa plana simple
+            const lidDisc = new THREE.Mesh(
+                new THREE.CylinderGeometry(2.05, 2.05, 0.3, 32),
+                woodMat
+            );
+            lidDisc.castShadow = true;
+            lid.add(lidDisc);
+
+            lid.position.y = 2.9;
+            scene.add(lid);
+        }
+
+        function createScrolls() {
+            const jarBot = 0.3;
+            const jarTop = 2.6;
+            const jarRadius = 1.8; // Radio máximo del frasco
+
+            for (let i = 0; i < TOTAL; i++) {
+                const color = scrollColors[i % scrollColors.length];
+                const scroll = createScrollMesh(color);
+
+                // Distribución orgánica dentro del volumen del frasco - MÁS ANCHA
+                // Altura aleatoria dentro del frasco
+                const y = jarBot + Math.random() * (jarTop - jarBot - 0.3);
+
+                // Posición radial aleatoria (distribución circular MÁS AMPLIA)
+                const angle = Math.random() * Math.PI * 2;
+                const radiusFactor = Math.pow(Math.random(), 0.3); // Más distribución hacia los bordes
+                const radius = radiusFactor * (jarRadius - 0.25); // Menos margen del borde
+
+                const x = Math.cos(angle) * radius;
+                const z = Math.sin(angle) * radius;
+
+                scroll.position.set(x, y, z);
+
+                // Escala ajustada para pergaminos grandes
+                const s = 0.48 + Math.random() * 0.12;  // Entre 0.48 y 0.6
+                scroll.scale.set(s, s, s);
+
+                // Rotación aleatoria para variedad visual
+                scroll.rotation.set(
+                    (Math.random() - 0.5) * 0.4,
+                    Math.random() * Math.PI * 2,
+                    (Math.random() - 0.5) * 0.4
+                );
+
+                scroll.userData = {
+                    index: i,
+                    discovered: false,
+                    initialPosition: scroll.position.clone(),
+                    originalColor: color  // Guardar el color original
+                };
+
+                scroll.castShadow = true;
+                scene.add(scroll);
+                scrollMeshes.push(scroll);
+            }
+        }
+
+        function createScrollMesh(color) {
+            const group = new THREE.Group();
+
+            // Pergamino con acabado MATE como papel bond
+            const scrollMat = new THREE.MeshStandardMaterial({
+                color: color,
+                roughness: 0.85,  // Muy mate como papel
+                metalness: 0,     // Sin metalness
+                emissive: 0x000000,  // Sin emisión, solo color natural
+                flatShading: false
+            });
+
+            // Pergamino MÁS GRANDE
+            const body = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.15, 0.15, 1.3, 12),  // Más grande: radio 0.15, largo 1.3
+                scrollMat
+            );
+            body.rotation.z = Math.PI / 2;
+            group.add(body);
+
+            return group;
+        }
+
+        const raycaster = new THREE.Raycaster();
+        const pointer = new THREE.Vector2();
+
+        // Guardar estado en localStorage
+        function saveProgress() {
+            const discovered = scrollMeshes
+                .map((scroll, index) => scroll.userData.discovered ? index : null)
+                .filter(i => i !== null);
+            localStorage.setItem('razonesDeAmor_discovered', JSON.stringify(discovered));
+            localStorage.setItem('razonesDeAmor_count', discoveredCount.toString());
+        }
+
+        // Cargar estado desde localStorage
+        function loadProgress() {
+            const saved = localStorage.getItem('razonesDeAmor_discovered');
+            const savedCount = localStorage.getItem('razonesDeAmor_count');
+
+            if (saved) {
+                const discoveredIndices = JSON.parse(saved);
+                discoveredIndices.forEach(index => {
+                    if (scrollMeshes[index]) {
+                        scrollMeshes[index].userData.discovered = true;
+                        scrollMeshes[index].visible = false;
+                    }
+                });
+            }
+
+            if (savedCount) {
+                discoveredCount = parseInt(savedCount);
+                updateCounter();
+            }
+        }
+
+        function onPointer(event) {
+            pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+            pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(pointer, camera);
+
+            // Detectar click en PAPELITOS INDIVIDUALES
+            const scrollIntersects = raycaster.intersectObjects(scrollMeshes, true);
+
+            if (scrollIntersects.length > 0) {
+                // Buscar el pergamino padre
+                let targetScroll = null;
+                for (const intersect of scrollIntersects) {
+                    let obj = intersect.object;
+                    // Subir hasta encontrar el grupo del pergamino
+                    while (obj.parent && !scrollMeshes.includes(obj)) {
+                        obj = obj.parent;
+                    }
+                    if (scrollMeshes.includes(obj) && !obj.userData.discovered) {
+                        targetScroll = obj;
+                        break;
+                    }
+                }
+
+                if (targetScroll) {
+                    discoverScroll(targetScroll);
+                }
+            }
+        }
+
+        function discoverScroll(scroll) {
+            scroll.userData.discovered = true;
+            discoveredCount++;
+            updateCounter();
+            saveProgress();  // Guardar en localStorage
+
+            // Abrir tapa
+            if (!lidOpen) {
+                openLid();
+            }
+
+            // Obtener el color original del papelito (no del material renderizado)
+            const scrollColorHex = scroll.userData.originalColor;
+
+            // Guardar posición original y hacer animación de salida
+            const startPos = scroll.position.clone();
+
+            // Animación: el papelito sale del frasco hacia arriba
+            const exitPos = new THREE.Vector3(startPos.x, 5, startPos.z);
+
+            flyAnimations.push({
+                scroll,
+                startTime: performance.now(),
+                duration: 800,
+                startPos,
+                targetPos: exitPos,
+                startRotation: {
+                    x: scroll.rotation.x,
+                    y: scroll.rotation.y,
+                    z: scroll.rotation.z
+                },
+                onComplete: () => {
+                    scroll.visible = false;
+                    showReason(scroll.userData.index, scrollColorHex);
+                }
+            });
+        }
+
+        function openLid() {
+            lidOpen = true;
+            const startY = lid.position.y;
+            const targetY = startY + 1.2;
+            const startRotZ = lid.rotation.z;
+            const targetRotZ = -Math.PI * 0.25;
+            const duration = 600;
+            const startTime = performance.now();
+
+            function animateLid() {
+                const elapsed = performance.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+                lid.position.y = startY + (targetY - startY) * easeProgress;
+                lid.rotation.z = startRotZ + (targetRotZ - startRotZ) * easeProgress;
+
+                if (progress < 1) {
+                    requestAnimationFrame(animateLid);
+                }
+            }
+
+            animateLid();
+        }
+
+        function closeLid() {
+            if (!lidOpen) return;
+
+            lidOpen = false;
+            const startY = lid.position.y;
+            const targetY = 2.9;
+            const startRotZ = lid.rotation.z;
+            const targetRotZ = 0;
+            const duration = 600;
+            const startTime = performance.now();
+
+            function animateLid() {
+                const elapsed = performance.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+                lid.position.y = startY + (targetY - startY) * easeProgress;
+                lid.rotation.z = startRotZ + (targetRotZ - startRotZ) * easeProgress;
+
+                if (progress < 1) {
+                    requestAnimationFrame(animateLid);
+                }
+            }
+
+            animateLid();
+        }
+
+        function updateCounter() {
+            // Contador ya no se muestra en UI, solo verificar si se descubrieron todos
+            if (discoveredCount === TOTAL) {
+                // Opcional: alguna acción cuando se descubren todos
+            }
+        }
+
+        function showReason(index, colorHex) {
+            // No mostrar número de razón
+            document.getElementById('message-number').textContent = '';
+            document.getElementById('reason-text').textContent = razones[index];
+
+            // Aplicar el color del papelito al fondo de la carta (convertir hex a string CSS)
+            const messageCard = document.querySelector('.message-card');
+            const colorString = '#' + colorHex.toString(16).padStart(6, '0');
+            messageCard.style.background = colorString;
+
+            // Cambiar color del botón para que combine
+            const closeBtn = messageCard.querySelector('.close-btn');
+            closeBtn.style.background = `rgba(255, 255, 255, 0.5)`;
+            closeBtn.style.borderColor = `rgba(92, 64, 51, 0.25)`;
+            closeBtn.style.color = '#2c1810';
+
+            document.getElementById('overlay').classList.add('active');
+            controls.autoRotate = false;
+            if (discoveredCount === TOTAL) setTimeout(showFinal, 1500);
+        }
+
+        function closeOverlay() {
+            document.getElementById('overlay').classList.remove('active');
+            controls.autoRotate = true;
+
+            // Cerrar tapa solo si no se han descubierto todos los pergaminos
+            if (discoveredCount < TOTAL) {
+                setTimeout(closeLid, 500);
+            }
+        }
+
+        function showFinal() {
+            document.getElementById('overlay').classList.remove('active');
+            document.getElementById('final-message').style.display = 'flex';
+        }
+
+        function onResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const t = performance.now();
+
+            // Animaciones de salida del frasco
+            for (let i = flyAnimations.length - 1; i >= 0; i--) {
+                const a = flyAnimations[i];
+                const p = Math.min((t - a.startTime) / a.duration, 1);
+                // Easing suave
+                const ease = 1 - Math.pow(1 - p, 3);
+
+                // Movimiento hacia arriba (salida del frasco)
+                a.scroll.position.lerpVectors(a.startPos, a.targetPos, ease);
+
+                // Rotación mientras vuela
+                a.scroll.rotation.y = a.startRotation.y + (Math.PI * 2 * ease);
+
+                // Fade out al final
+                if (p > 0.7) {
+                    const fade = 1 - ((p - 0.7) / 0.3);
+                    a.scroll.children.forEach(c => {
+                        if (c.material) {
+                            c.material.transparent = true;
+                            c.material.opacity = Math.max(fade, 0);
+                        }
+                    });
+                }
+
+                if (p >= 1) {
+                    a.onComplete();
+                    flyAnimations.splice(i, 1);
+                }
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        if (typeof THREE !== 'undefined') {
+            init();
+        } else {
+            console.error('Three.js no se cargó correctamente');
+        }
+    </script>
+</body>
+</html>
