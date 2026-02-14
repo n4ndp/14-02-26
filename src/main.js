@@ -3,6 +3,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { keys } from './input.js';
 import { generateMaze, createMazeGeometry, getMazeData } from './maze.js';
 import { initPhysics, createCarBody, updateCarPhysics, syncCarMesh, stepPhysics, createMazeColliders } from './physics.js';
+import { createStations } from './stations.js';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -70,6 +71,8 @@ const mazeData = generateMaze(50, 50);
 const mazeWalls = createMazeGeometry(mazeData);
 scene.add(mazeWalls);
 
+const stations = createStations(scene, mazeData);
+
 initializePhysics();
 
 const cameraOffset = new THREE.Vector3(15, 15, 15);
@@ -110,5 +113,6 @@ window.__DEBUG_SCENE = scene;
 window.__DEBUG_RENDERER = renderer;
 window.__DEBUG_CAMERA = camera;
 window.__DEBUG_MAZE = getMazeData();
+window.__DEBUG_STATIONS = stations;
 
 animate();
